@@ -1,57 +1,70 @@
-# proposal-review — 方案讨论 Skill for Claude Code
+# proposal-review
 
-> A Claude Code skill that turns Claude into an opinionated thinking partner — one that challenges assumptions, seeks visual references, and keeps both sides accurately understood.
+A Claude Code skill for thinking through ideas together — without Claude just telling you what you want to hear.
 
 ---
 
-## What it does
+## The problem this solves
 
-`proposal-review` changes how Claude participates in design and product discussions. Instead of enthusiastically completing whatever you describe, Claude acts as a **thinking partner with a stance**:
+When you describe an idea to Claude, it usually tries to help you execute it. It'll refine your wording, fill in the details, and generally be enthusiastic about whatever direction you're heading.
 
-- Challenges assumptions before helping you refine them
-- Searches for visual references when words can't align a direction
-- Tracks decisions, rejections, and open questions across the conversation
-- Issues structured task lists for things you need to do in external tools (Figma, user testing, etc.)
+That's fine for execution tasks. But when you're still figuring out *whether* the idea is good — that behavior is actively unhelpful.
 
-The core principle: **bidirectional fidelity** — what you say doesn't get misunderstood, and what Claude says can be verified, not just trusted.
+This skill changes Claude's default mode in discussions. Instead of completing your thoughts, it asks what assumptions your thinking is based on. Instead of describing a visual direction in flowery prose, it goes and finds actual reference images. And when something is better done by you (in Figma, in a user interview, on your phone), it writes you a task list instead of pretending it can do it.
+
+The guiding principle is **bidirectional fidelity** — you shouldn't have to wonder if Claude misunderstood you, and Claude shouldn't say things you can only trust, not verify.
 
 ---
 
 ## When to use it
 
-| Situation | Example trigger |
-|-----------|----------------|
-| Discussing a product idea | "我有个想法" / "let's discuss this"  |
-| Reviewing a design direction | "帮我想想这个方案" / "design review" |
-| Choosing between approaches | "我在考虑两种方案" / "help me think through" |
-| Aligning on a visual style | "怎么看这个设计方向" / "proposal review" |
+Anytime you're in the "figuring it out" stage of something:
+
+- You have a product idea and want to pressure-test it before building
+- You're choosing between two design directions and can't quite articulate why one feels wrong
+- You're about to make a technical decision and want a second opinion that might push back
+- You need to align on a visual style but words keep failing you
+
+**Trigger phrases:** `讨论一下` / `方案讨论` / `我有个想法` / `帮我想想` / `design review` / `let's discuss` / `help me think through`
+
+---
+
+## What it actually does
+
+**At the start of every discussion**, Claude asks three things before jumping in: what's the context, what do you want to walk away with, and what constraints are already fixed. If Claude has project memory, it checks whether that's still accurate rather than silently assuming it is.
+
+**During the discussion**, Claude shifts between modes depending on where things are:
+
+- *Early / fuzzy* — it challenges assumptions and asks what's behind them, rather than helping you polish ideas that might be wrong
+- *Options on the table* — it helps you compare systematically and pushes you toward an actual decision instead of leaving it open-ended
+- *Direction decided* — it switches to collaborative mode, helps fill in details, and flags risks without second-guessing the direction anymore
+
+It announces when it's switching modes, so you always know what role it's playing.
+
+**When words aren't working** (usually for visual/aesthetic directions), Claude stops and says so — then searches for reference images instead of continuing to describe things. It comes back with specific callouts on what's worth looking at, counterexamples of what failure looks like, and a follow-up question.
+
+**When you need to do something outside the conversation** — run a user test, open Figma, check something on your phone — Claude writes you a structured task with steps and a clear "done when" condition, rather than approximating the thing it can't actually do.
+
+**At the end**, Claude summarizes what was decided, what was ruled out and why, what's still open, and what you need to do next.
 
 ---
 
 ## Installation
 
-### Option A: Copy skill file into your project
+The simplest approach: copy `SKILL.md` into your project and reference it from `CLAUDE.md`.
 
 ```bash
 mkdir -p .claude/skills/proposal-review
 cp SKILL.md .claude/skills/proposal-review/SKILL.md
 ```
 
-Then reference it in your project's `CLAUDE.md`:
+Then add this line to your project's `CLAUDE.md`:
 
 ```
 @.claude/skills/proposal-review/SKILL.md
 ```
 
-### Option B: Reference directly (if you cloned this repo)
-
-Add to your project's `CLAUDE.md`:
-
-```
-@/path/to/proposal-review/SKILL.md
-```
-
-### Option C: Sync to global skills (all projects)
+If you want it available across all your projects, put it in your global skills folder instead:
 
 ```bash
 mkdir -p ~/.claude/skills/proposal-review
@@ -60,98 +73,6 @@ cp SKILL.md ~/.claude/skills/proposal-review/SKILL.md
 
 ---
 
-## How it works
-
-### Step 1 — Entry ritual (every session)
-
-Before any discussion, Claude asks 3 questions:
-
-- **Background**: What's the project/context?
-- **Goal**: What specific outcome do you want from this discussion?
-- **Constraints**: What's already decided and can't change?
-
-If Claude has project memory, it reads it first and explicitly asks: *"I see X from before — is that still accurate?"*
-
-### Step 2 — Dynamic mode switching
-
-Claude switches between three modes based on conversation state, and **announces the switch**:
-
-| Mode | Trigger | What Claude does |
-|------|---------|-----------------|
-| **Explore / Challenge** | Direction is vague, assumptions untested | Questions the premise before helping refine |
-| **Focus / Evaluate** | Options have surfaced, user is comparing | Structured comparison, pushes toward a decision |
-| **Refine / Execute** | Direction is decided | Fills in details, flags execution risks |
-
-### Step 3 — Visual reference workflow
-
-When words can't align a visual direction, Claude pauses and says so explicitly:
-
-> "I think we've hit the limit of what text can align here. I want to find some reference images. Here's the direction I'm looking for: [X]. Does that sound right?"
-
-Claude then runs a web search and returns:
-- Positive references with specific callouts ("the part worth looking at here is X")
-- Counterexamples ("this is what failure looks like in this direction")
-- A follow-up question to keep the discussion grounded
-
-### Step 4 — Task delegation
-
-When something is faster for you to do in an external tool, Claude issues a structured task:
-
-```
-[Task for you]
-
-Task: [one-sentence description]
-
-Steps:
-1. [specific action]
-2. [specific action]
-
-Done when: Send me [screenshot / file / specific output] and I'll [verify X / continue to Y]
-
-Estimated time: ~X min
-```
-
-### Step 5 — Summary
-
-At the end of any converged discussion, Claude produces a structured summary:
-
-- Decisions made (with reasoning)
-- Options rejected (with reasons)
-- Open questions (with what's needed to resolve them)
-- Visual anchors (reference URLs, if any)
-- Your action items
-
----
-
-## Anti-patterns this skill prevents
-
-| What Claude normally does | What it does with this skill |
-|---------------------------|------------------------------|
-| "Great idea! Let me help you refine it…" | Asks what assumption this is based on first |
-| Gives three parallel options and asks you to pick | States Claude's recommendation with reasoning |
-| Stops pushing back when you insist | Records the disagreement explicitly and explains why |
-| Uses vivid language to describe a visual direction | Searches for actual reference images |
-| Ends the conversation without summarizing | Proactively offers to document what was decided |
-
----
-
-## Skill file
-
-| File | Description |
-|------|-------------|
-| [`SKILL.md`](SKILL.md) | Full skill instructions (load this into Claude) |
-
----
-
 ## Compatibility
 
-- **Claude Code** (CLI, desktop app, VS Code / JetBrains extension)
-- Works best with models that have web search access (for visual reference workflow)
-- Language: primarily Chinese with full English support
-
----
-
-## Related skills
-
-- [market-research](../market-research/) — research the competitive landscape before a proposal discussion
-- [frontend-design](../frontend-design/) — execute UI decisions made during the discussion
+Works with Claude Code (CLI, desktop app, VS Code / JetBrains extension). The visual reference step requires web search access. Primarily written in Chinese but fully functional in English.
